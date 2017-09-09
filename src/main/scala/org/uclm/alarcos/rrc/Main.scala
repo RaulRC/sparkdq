@@ -6,6 +6,7 @@ import org.uclm.alarcos.rrc.config.DQAssessmentConfiguration
 import org.uclm.alarcos.rrc.utils.ParamsHelper
 import org.apache.spark.SparkConf
 import org.apache.spark.sql.SparkSession
+import org.uclm.alarcos.rrc.dataquality.completeness.Interlinking
 /**
   * Created by Raul Reguillo on 31/08/17.
   */
@@ -25,9 +26,8 @@ object Main {
       System.exit(1)
     }
     implicit val params = ParamsHelper.getParams(args)
-    implicit val processClass = params.`class`
     implicit val env = params.env
-    implicit val timeWindow = params.timeWindow
+    implicit val inputFile = params.inputFile
 
     if (!environments.contains(env)) {
       logger.error(s"Environment $env not allowed. Valid environments are: $environments")
@@ -40,7 +40,7 @@ object Main {
     val loadedConfig = DQAssessmentConfiguration.apply(env, config)
 
     val sparkConf = new SparkConf()
-      .setAppName(processClass)
+      .setAppName("Interlinking")
       .setMaster(loadedConfig.masterMode)
 
     val spark = SparkSession
@@ -49,8 +49,8 @@ object Main {
       .getOrCreate()
 
 
-    logger.info("Loading class " + processClass)
-    launchStep(Class.forName(s"org.uclm.alarcos.rrc.io.$processClass")) (loadedConfig, spark, timeWindow)
+    logger.info("Loading class " + "Interlinking")
+    launchStep(Class.forName(s"org.uclm.alarcos.rrc.dataquality.completeness.Interlinking")) (loadedConfig, spark, inputFile)
 
   }
 
@@ -65,7 +65,7 @@ object Main {
   def launchStep[T](clazz: java.lang.Class[T])(args: AnyRef*): T = {
     val constructor = clazz.getConstructors()(0)
     val instance = constructor.newInstance(args: _*).asInstanceOf[T]
-    instance.asInstanceOf[ReaderRDF].execute()
+    instance.asInstanceOf[Interlinking].execute()
     instance
   }
 
