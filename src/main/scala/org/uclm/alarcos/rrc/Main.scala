@@ -50,7 +50,7 @@ object Main {
 
 
     logger.info("Loading class " + "Interlinking")
-    launchStep(Class.forName(s"org.uclm.alarcos.rrc.dataquality.completeness.Interlinking")) (loadedConfig, spark, inputFile)
+    launchStep(Class.forName(s"org.uclm.alarcos.rrc.dataquality.completeness.Interlinking")) (spark, inputFile)
 
   }
 
