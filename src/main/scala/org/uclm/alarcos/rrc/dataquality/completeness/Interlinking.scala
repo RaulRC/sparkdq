@@ -15,7 +15,8 @@ trait InterlinkingMeasurement extends Serializable with ReaderRDF{
   protected val processSparkSession: SparkSession
 
   def getMeasurementGlobal(graph: Graph[Node, Node]): Double = {
-    graph.vertices.map(vert => vert._2).filter(node => !node.isURI()).count().toDouble/graph.vertices.count().toDouble
+    val total = graph.vertices.count().toDouble
+    (total - graph.vertices.map(vert => vert._2).filter(node => !node.isURI()).count().toDouble)/total
   }
 
   def getMeasurementSubgraph(subjects: VertexRDD[Node], graph: Graph[Node, Node], depth: Int ): RDD[(Int, Double)] = {
@@ -28,7 +29,7 @@ trait InterlinkingMeasurement extends Serializable with ReaderRDF{
       results = expandNodes(results, graph)
       tCount = results.count().toDouble
       pCount = results.filter(line => !line._2.isURI).count().toDouble
-      measurements = measurements ++ Seq((level, pCount/tCount))
+      measurements = measurements ++ Seq((level, (tCount - pCount)/tCount))
     }
     processSparkSession.sparkContext.parallelize(measurements)
   }
@@ -43,7 +44,7 @@ trait InterlinkingMeasurement extends Serializable with ReaderRDF{
       results.collect().foreach(println(_))
       tCount = results.count().toDouble
       pCount = results.filter(line => !line._2.isURI).count().toDouble
-      measurements = measurements ++ Seq(Measurement(subjectId, subjectNode, level, pCount/tCount))
+      measurements = measurements ++ Seq(Measurement(subjectId, subjectNode, level, (tCount-pCount)/tCount))
     }
     processSparkSession.sparkContext.parallelize(measurements)
   }
