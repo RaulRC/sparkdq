@@ -20,17 +20,16 @@ trait InterlinkingMeasurement extends Serializable with ReaderRDF{
   }
 
   def getMeasurementSubgraph(subjects: VertexRDD[Node], graph: Graph[Node, Node], depth: Int ): RDD[(Int, Double)] = {
-    var results: VertexRDD[Node] = subjects
+    var expanded = expandNodesNLevel(subjects, graph, depth)
+    import processSparkSession.implicits._
+    val vertDF = graph.vertices.toDF(Seq("source", "node"): _*)
+
     var measurements: Seq[(Int, Double)] = Seq()
     var leafs: Long = 0
     var tCount: Double = 0
     var pCount: Double = 0
-    for (level <- 1 to depth){
-      results = expandNodes(results, graph)
-      tCount = results.count().toDouble
-      pCount = results.filter(line => !line._2.isURI).count().toDouble
-      measurements = measurements ++ Seq((level, (tCount - pCount)/tCount))
-    }
+
+
     processSparkSession.sparkContext.parallelize(measurements)
   }
   def getMeasurementSubject(subjectId: VertexId, subjectNode: Node, graph: Graph[Node, Node], depth: Int ): RDD[Measurement] = {
@@ -57,8 +56,8 @@ class Interlinking(sparkSession: SparkSession, inputFile: String) extends Interl
     val graph = loadGraph(sparkSession, inputFile)
     val s2 = getSubjectsWithProperty(graph, "http://dbpedia.org/ontology/deathPlace")
     s2.collect().foreach(println(_))
-    val vertex = s2.take(1)(0)
-    var result = getMeasurementSubject(vertex._1, vertex._2, graph, 3)
+    //var result = getMeasurementSubject(vertex._1, vertex._2, graph, 3)
+    var result = getMeasurementSubgraph(s2, graph, 3)
     result.collect().foreach(println(_))
   }
 }
