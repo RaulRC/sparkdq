@@ -24,7 +24,8 @@ trait InterlinkingMeasurement extends Serializable with ReaderRDF{
     import processSparkSession.implicits._
 
     val filteredNodes = graph.vertices.map(l => (l._1, l._2.isURI())).toDF(Seq("nodeId", "isURI"): _*)
-    val nodesTF = expanded.join(filteredNodes, $"level" === $"nodeId").drop($"nodeId")
+    val nodesTF = expanded.join(filteredNodes, $"level" === $"nodeId").drop($"nodeId").drop($"level").orderBy($"source", $"depth")
+    nodesTF.show(10000)
     println("___")
 //    val res = filteredNodes.collect()
 //    val uriNodes = filteredNodes.map(l => (l._1, l._2.isURI())).toDF(Seq("nodeIdF", "isURI"): _*)
