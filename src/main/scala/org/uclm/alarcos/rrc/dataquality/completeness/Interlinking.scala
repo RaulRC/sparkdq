@@ -22,24 +22,20 @@ trait InterlinkingMeasurement extends Serializable with ReaderRDF{
   def getMeasurementSubgraph(subjects: VertexRDD[Node], graph: Graph[Node, Node], depth: Int ): Dataset[Row] = {
     var expanded = expandNodesNLevel(subjects, graph, depth)
     import processSparkSession.implicits._
-    val vertDF = graph.vertices.map(l => l._1).toDF(Seq("nodeId"): _*)
 
-    val subjectsDF = vertDF.join(expanded, $"nodeId" === $"source")
-    val objectsDF = vertDF.join(expanded, $"nodeId" === $"level")
-
-    val allDF = subjectsDF.union(objectsDF).distinct().drop($"source").drop($"level").drop($"depth")
-    val ids = allDF.collect()
-    val filteredNodes = graph.vertices.filter(l => ids.contains(l._1.asInstanceOf[Long]))
-    val res = filteredNodes.collect()
-    val uriNodes = filteredNodes.map(l => (l._1, l._2.isURI())).toDF(Seq("nodeIdF", "isURI"): _*)
-    val resultDF = expanded.join(uriNodes, $"level" === $"nodeIdF")
+    val filteredNodes = graph.vertices.map(l => (l._1, l._2.isURI())).toDF(Seq("nodeId", "isURI"): _*)
+    val nodesTF = expanded.join(filteredNodes, $"level" === $"nodeId").drop($"nodeId")
+    println("___")
+//    val res = filteredNodes.collect()
+//    val uriNodes = filteredNodes.map(l => (l._1, l._2.isURI())).toDF(Seq("nodeIdF", "isURI"): _*)
+//    val resultDF = expanded.join(uriNodes, $"level" === $"nodeIdF")
 
     var measurements: Seq[(Int, Double)] = Seq()
     var leafs: Long = 0
     var tCount: Double = 0
     var pCount: Double = 0
 
-    resultDF
+    null
   }
   def getMeasurementSubject(subjectId: VertexId, subjectNode: Node, graph: Graph[Node, Node], depth: Int ): RDD[Measurement] = {
     var results: VertexRDD[Node] = graph.vertices.filter(line => line._1 == subjectId)
