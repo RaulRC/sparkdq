@@ -22,14 +22,14 @@ trait InterlinkingMeasurement extends Serializable with ReaderRDF{
   def getMeasurementSubgraph(subjects: VertexRDD[Node], graph: Graph[Node, Node], depth: Int ): Dataset[Row] = {
     val expanded = expandNodesNLevel(subjects, graph, depth)
     import processSparkSession.implicits._
-
+    val subs = subjects.map(l => (l._1, l._2.getURI())).toDF(Seq("vertexId", "vertexURI"): _*)
     val filteredNodes = graph.vertices.map(l => (l._1, l._2.isURI())).toDF(Seq("nodeId", "isURI"): _*)
     val nodesTF = expanded.join(filteredNodes, $"level" === $"nodeId").drop($"nodeId").drop($"level").orderBy($"source", $"depth")
     val partResultTrue = nodesTF.groupBy($"source", $"depth").agg(count(when($"isURI" === true, true)) as "countT").orderBy($"source", $"depth")
     val partResultFalse = nodesTF.groupBy($"source", $"depth").agg(count(when($"isURI" === false, true)) as "countF").orderBy($"source", $"depth")
       .toDF(Seq("sourceF", "depthF", "countF"): _*)
     val result = partResultTrue.join(partResultFalse, $"source" === $"sourceF" and $"depth" === $"depthF").drop($"sourceF").drop($"depthF").orderBy($"source", $"depth")
-      .withColumn("measurement", getRatio($"countT", $"countF"))
+      .withColumn("measurement", getRatio($"countT", $"countF")).join(subs, $"source" === $"vertexId").drop($"vertexId")
     result
   }
   def getRatio = udf((totalTrues: Int, totalFalses: Int) => { totalTrues.toDouble/(totalTrues.toDouble + totalFalses.toDouble) })
@@ -52,14 +52,16 @@ trait InterlinkingMeasurement extends Serializable with ReaderRDF{
 }
 
 class Interlinking(sparkSession: SparkSession, inputFile: String) extends InterlinkingMeasurement{
+
+t
   protected val processSparkSession: SparkSession = sparkSession
 
   def execute(): Unit = {
     val graph = loadGraph(sparkSession, inputFile)
     val s2 = getSubjectsWithProperty(graph, "http://dbpedia.org/ontology/deathPlace")
     s2.collect().foreach(println(_))
-    //var result = getMeasurementSubject(vertex._1, vertex._2, graph, 3)
     var result = getMeasurementSubgraph(s2, graph, 3)
-    result.collect().foreach(println(_))
+    result.show(100000, truncate=false)
+    //result.collect().foreach(println(_))
   }
 }

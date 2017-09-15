@@ -19,9 +19,9 @@ class MeasurementsTest extends CommonTest with SparkSpec with MockFactory {
     val step = MockedTripleReader
     val graph = step.loadGraph(spark, testPath)
     val depth = 4
-    val result = step.getMeasurementSubgraph(graph.vertices, graph, depth)
+    val result = step.getMeasurementSubgraph(graph.vertices.filter(l => l._2.isURI()), graph, depth)
     val results = result.collect()
-    result.show()
+    result.show(1000, truncate=false)
     //    A -> B -> D -> F -> G
     //         | \  |
     //         v  \,v
