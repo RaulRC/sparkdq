@@ -52,8 +52,6 @@ trait InterlinkingMeasurement extends Serializable with ReaderRDF{
 }
 
 class Interlinking(sparkSession: SparkSession, inputFile: String) extends InterlinkingMeasurement{
-
-t
   protected val processSparkSession: SparkSession = sparkSession
 
   def execute(): Unit = {
