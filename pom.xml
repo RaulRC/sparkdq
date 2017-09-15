@@ -3,7 +3,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.uclm.alarcos.rrc</groupId>
   <artifactId>sparkdq</artifactId>
-  <version>1.0-SNAPSHOT</version>
+  <version>1.0</version>
   <inceptionYear>2017</inceptionYear>
     <properties>
         <scala.version>2.11.8</scala.version>
@@ -100,7 +100,7 @@
         <dependency>
             <groupId>org.uclm.alarcos.rrc</groupId>
             <artifactId>sparkrdf</artifactId>
-            <version>1.0-SNAPSHOT</version>
+            <version>1.0</version>
         </dependency>
 
         <!-- Testing -->
@@ -190,7 +190,7 @@
                     <descriptorRefs>
                         <descriptorRef>jar-with-dependencies</descriptorRef>
                     </descriptorRefs>
-                    <finalName>sparkrdf-1.0-SNAPSHOT-uber</finalName>
+                    <finalName>sparkrdf-1.0</finalName>
                     <appendAssemblyId>false</appendAssemblyId>
                 </configuration>
                 <executions>
