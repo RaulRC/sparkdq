@@ -20,7 +20,7 @@ trait InterlinkingMeasurement extends Serializable with ReaderRDF{
   }
 
   def getMeasurementSubgraph(subjects: VertexRDD[Node], graph: Graph[Node, Node], depth: Int ): Dataset[Row] = {
-    var expanded = expandNodesNLevel(subjects, graph, depth)
+    val expanded = expandNodesNLevel(subjects, graph, depth)
     import processSparkSession.implicits._
 
     val filteredNodes = graph.vertices.map(l => (l._1, l._2.isURI())).toDF(Seq("nodeId", "isURI"): _*)
@@ -29,20 +29,11 @@ trait InterlinkingMeasurement extends Serializable with ReaderRDF{
     val partResultFalse = nodesTF.groupBy($"source", $"depth").agg(count(when($"isURI" === false, true)) as "countF").orderBy($"source", $"depth")
       .toDF(Seq("sourceF", "depthF", "countF"): _*)
     val result = partResultTrue.join(partResultFalse, $"source" === $"sourceF" and $"depth" === $"depthF").drop($"sourceF").drop($"depthF").orderBy($"source", $"depth")
-    result.show(1000)
-    println("___")
-
-//    val res = filteredNodes.collect()
-//    val uriNodes = filteredNodes.map(l => (l._1, l._2.isURI())).toDF(Seq("nodeIdF", "isURI"): _*)
-//    val resultDF = expanded.join(uriNodes, $"level" === $"nodeIdF")
-
-    var measurements: Seq[(Int, Double)] = Seq()
-    var leafs: Long = 0
-    var tCount: Double = 0
-    var pCount: Double = 0
-
-    null
+      .withColumn("measurement", getRatio($"countT", $"countF"))
+    result
   }
+  def getRatio = udf((totalTrues: Int, totalFalses: Int) => { totalTrues.toDouble/(totalTrues.toDouble + totalFalses.toDouble) })
+
   def getMeasurementSubject(subjectId: VertexId, subjectNode: Node, graph: Graph[Node, Node], depth: Int ): RDD[Measurement] = {
     var results: VertexRDD[Node] = graph.vertices.filter(line => line._1 == subjectId)
     results.collect().foreach(println(_))
