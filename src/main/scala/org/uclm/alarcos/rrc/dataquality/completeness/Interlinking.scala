@@ -6,7 +6,7 @@ import org.apache.spark.rdd.RDD
 import org.apache.spark.sql._
 import org.uclm.alarcos.rrc.io.ReaderRDF
 import org.uclm.alarcos.rrc.models.Measurement
-
+import org.apache.spark.sql.functions._
 
 /**
   * Created by raulreguillo on 6/09/17.
@@ -25,8 +25,13 @@ trait InterlinkingMeasurement extends Serializable with ReaderRDF{
 
     val filteredNodes = graph.vertices.map(l => (l._1, l._2.isURI())).toDF(Seq("nodeId", "isURI"): _*)
     val nodesTF = expanded.join(filteredNodes, $"level" === $"nodeId").drop($"nodeId").drop($"level").orderBy($"source", $"depth")
-    nodesTF.show(10000)
+    val partResultTrue = nodesTF.groupBy($"source", $"depth").agg(count(when($"isURI" === true, true)) as "countT").orderBy($"source", $"depth")
+    val partResultFalse = nodesTF.groupBy($"source", $"depth").agg(count(when($"isURI" === false, true)) as "countF").orderBy($"source", $"depth")
+      .toDF(Seq("sourceF", "depthF", "countF"): _*)
+    val result = partResultTrue.join(partResultFalse, $"source" === $"sourceF" and $"depth" === $"depthF").drop($"sourceF").drop($"depthF").orderBy($"source", $"depth")
+    result.show(1000)
     println("___")
+
 //    val res = filteredNodes.collect()
 //    val uriNodes = filteredNodes.map(l => (l._1, l._2.isURI())).toDF(Seq("nodeIdF", "isURI"): _*)
 //    val resultDF = expanded.join(uriNodes, $"level" === $"nodeIdF")
