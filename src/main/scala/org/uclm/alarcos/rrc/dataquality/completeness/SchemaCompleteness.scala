@@ -20,13 +20,25 @@ trait SchemaCompletenessgMeasurement extends Serializable with ReaderRDF{
   def getMeasurementGlobal(graph: Graph[Node, Node], properties: Seq[String]): Dataset[Row] = {
     import processSparkSession.implicits._
     val edgeRDD = graph.edges.filter(l => true)
-    properties.map(p => edgeRDD.filter(l => l.attr.hasURI(p))).reduce(_ union _)
-      .map(l => l.srcId).toDF(Seq("source"): _*)
-      .groupBy($"source").agg(count($"source") as "propCount")
+
+    val propIdsRDD = properties.map(p => edgeRDD.filter(l => l.attr.hasURI(p))).reduce(_ union _)
+      .map(l => l.srcId).cache()
+
+    val nonPropsDF = edgeRDD.map(l => l.srcId).toDF(Seq("source"): _*)
+    nonPropsDF.join(propIdsRDD
+      .toDF(Seq("sourceProp"): _*)
+      .groupBy($"sourceProp").agg(count($"sourceProp") as "propCount")
       .withColumn("totalProperties", lit(properties.length))
-      .withColumn("measurement", getRatio($"propCount", $"totalProperties"))
+      .withColumn("meas", getRatio($"propCount", $"totalProperties"))
       .drop($"propCount")
       .drop($"totalProperties")
+      .drop($"srcId"), $"source" === $"sourceProp", "leftouter")
+      .drop($"sourceProp")
+        .withColumn("measurement", when(
+          col("meas").isNull, 0.0
+        ).otherwise(col("meas")))
+      .drop($"meas")
+      .distinct()
   }
   def getRatio = udf((totalTrues: Int, total: Int) => {
     var res = totalTrues.toDouble/total.toDouble
