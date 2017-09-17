@@ -8,9 +8,14 @@ import org.uclm.alarcos.rrc.io.ReaderRDF
 import org.uclm.alarcos.rrc.models.Measurement
 import org.apache.spark.sql.functions._
 
+import scala.collection.mutable
+
 /**
   * Created by raulreguillo on 6/09/17.
   */
+
+case class SchemaMeasurement(srcId: VertexId, measurement: Boolean, uri: String)
+
 trait SchemaCompletenessgMeasurement extends Serializable with ReaderRDF{
   protected val processSparkSession: SparkSession
 
@@ -25,14 +30,14 @@ trait SchemaCompletenessgMeasurement extends Serializable with ReaderRDF{
   }
   def getRatio = udf((totalTrues: Int, totalFalses: Int) => { totalTrues.toDouble/(totalTrues.toDouble + totalFalses.toDouble) })
 
-  def getMeasurementSubject(subjectId: VertexId, graph: Graph[Node, Node], properties: Seq[String]): Dataset[Row] = {
+  def getMeasurementSubject(subjectId: VertexId, graph: Graph[Node, Node], properties: Seq[String]): Boolean = {
     import processSparkSession.implicits._
-    val df = graph.edges.filter(l => l.srcId == subjectId)
-      .filter(ll => properties.contains(ll.attr.getName()))
-    val measurement = df.count().toDouble/properties.length.toDouble
-    df.map(l => l.srcId )
-      .toDF(Seq("Source"): _*)
-      .withColumn("measurement", lit(measurement))
+    if (graph.edges
+      .filter(l => l.srcId == subjectId)
+      .filter(ll => properties.map(p => ll.attr.hasURI(p)).foldLeft(true)(_ && _))
+      .distinct()
+      .count().toDouble >= 1
+    ) true else false
   }
 }
 
@@ -41,7 +46,7 @@ class Schema(sparkSession: SparkSession, inputFile: String) extends SchemaComple
 
   def execute(): Unit = {
     val graph = loadGraph(sparkSession, inputFile)
-    println(getMeasurementGlobal(graph, Seq("http://dbpedia.org/ontology/deathPlace")))
+    println(getMeasurementSubject(graph.vertices.first()._1, graph, Seq("http://dbpedia.org/ontology/deathPlace")))
     //val result = getMeasurementSubject(graph.vertices.first()._1, graph, Seq("<http://dbpedia.org/ontology/deathPlace>"))
     //result.show()
   }
