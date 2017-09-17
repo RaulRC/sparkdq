@@ -41,6 +41,7 @@ trait SchemaCompletenessgMeasurement extends Serializable with ReaderRDF{
       .drop($"srcId")
   }
 
+  @deprecated
   def getMeasurementSubject(subjectId: VertexId, graph: Graph[Node, Node], properties: Seq[String]): Boolean = {
     import processSparkSession.implicits._
     if (graph.edges
