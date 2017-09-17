@@ -8,8 +8,6 @@ import org.uclm.alarcos.rrc.io.ReaderRDF
 import org.uclm.alarcos.rrc.models.Measurement
 import org.apache.spark.sql.functions._
 
-import scala.collection.mutable
-
 /**
   * Created by raulreguillo on 6/09/17.
   */
@@ -25,10 +23,22 @@ trait SchemaCompletenessgMeasurement extends Serializable with ReaderRDF{
   }
 
   def getMeasurementSubgraph(subjects: VertexRDD[Node], graph: Graph[Node, Node], properties: Seq[String]): Dataset[Row] = {
-    //ToDo
-    null
+    import processSparkSession.implicits._
+
+    graph.vertices
+      .filter(l => l._2.isURI())
+      .map(l => (l._1, l._2.getURI()))
+      .toDF(Seq("srcId", "uri"): _*)
+      .join(
+        graph.edges
+          .filter(ll => properties.map(p => ll.attr.hasURI(p)).foldLeft(true)(_ && _))
+          .map(line => (line.srcId, true))
+          .distinct()
+          .toDF(Seq("source", "partialMeasurement"): _*), $"srcId" === $"source", "leftouter")
+      .withColumn("measurement", when(col("partialMeasurement").isNotNull, true).otherwise(false))
+      .drop($"source")
+      .drop($"partialMeasurement")
   }
-  def getRatio = udf((totalTrues: Int, totalFalses: Int) => { totalTrues.toDouble/(totalTrues.toDouble + totalFalses.toDouble) })
 
   def getMeasurementSubject(subjectId: VertexId, graph: Graph[Node, Node], properties: Seq[String]): Boolean = {
     import processSparkSession.implicits._
@@ -46,8 +56,10 @@ class Schema(sparkSession: SparkSession, inputFile: String) extends SchemaComple
 
   def execute(): Unit = {
     val graph = loadGraph(sparkSession, inputFile)
-    println(getMeasurementSubject(graph.vertices.first()._1, graph, Seq("http://dbpedia.org/ontology/deathPlace")))
-    //val result = getMeasurementSubject(graph.vertices.first()._1, graph, Seq("<http://dbpedia.org/ontology/deathPlace>"))
-    //result.show()
+    val result = getMeasurementSubgraph(graph.vertices, graph, Seq(
+      "http://dbpedia.org/ontology/birthPlace",
+      "http://dbpedia.org/ontology/deathPlace"
+    ))
+    result.show(1000, truncate=false)
   }
 }
