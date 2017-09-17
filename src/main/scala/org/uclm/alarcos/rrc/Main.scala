@@ -50,7 +50,7 @@ object Main {
 
 
     logger.info("Loading class " + "SchemaCompleteness")
-    launchStep(Class.forName(s"org.uclm.alarcos.rrc.dataquality.completeness.Schema")) (spark, inputFile)
+    launchStep(Class.forName(s"org.uclm.alarcos.rrc.dataquality.completeness.SchemaCompletenessTF")) (spark, inputFile)
 
   }
 
@@ -65,7 +65,7 @@ object Main {
   def launchStep[T](clazz: java.lang.Class[T])(args: AnyRef*): T = {
     val constructor = clazz.getConstructors()(0)
     val instance = constructor.newInstance(args: _*).asInstanceOf[T]
-    instance.asInstanceOf[org.uclm.alarcos.rrc.dataquality.completeness.Schema].execute()
+    instance.asInstanceOf[org.uclm.alarcos.rrc.dataquality.completeness.SchemaCompletenessTF].execute()
     instance
   }
 

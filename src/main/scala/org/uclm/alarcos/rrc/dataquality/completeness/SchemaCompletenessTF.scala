@@ -51,7 +51,7 @@ trait SchemaCompletenessgMeasurement extends Serializable with ReaderRDF{
   }
 }
 
-class Schema(sparkSession: SparkSession, inputFile: String) extends SchemaCompletenessgMeasurement{
+class SchemaCompletenessTF(sparkSession: SparkSession, inputFile: String) extends SchemaCompletenessgMeasurement{
   protected val processSparkSession: SparkSession = sparkSession
 
   def execute(): Unit = {
