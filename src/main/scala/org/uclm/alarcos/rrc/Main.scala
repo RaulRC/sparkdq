@@ -6,7 +6,7 @@ import org.uclm.alarcos.rrc.config.DQAssessmentConfiguration
 import org.uclm.alarcos.rrc.utils.ParamsHelper
 import org.apache.spark.SparkConf
 import org.apache.spark.sql.SparkSession
-import org.uclm.alarcos.rrc.dataquality.completeness.Interlinking
+import org.uclm.alarcos.rrc.dataquality.completeness.{Interlinking, Schema}
 /**
   * Created by Raul Reguillo on 31/08/17.
   */
@@ -49,8 +49,8 @@ object Main {
       .getOrCreate()
 
 
-    logger.info("Loading class " + "Interlinking")
-    launchStep(Class.forName(s"org.uclm.alarcos.rrc.dataquality.completeness.Interlinking")) (spark, inputFile)
+    logger.info("Loading class " + "SchemaCompleteness")
+    launchStep(Class.forName(s"org.uclm.alarcos.rrc.dataquality.completeness.Schema")) (spark, inputFile)
 
   }
 
@@ -65,7 +65,7 @@ object Main {
   def launchStep[T](clazz: java.lang.Class[T])(args: AnyRef*): T = {
     val constructor = clazz.getConstructors()(0)
     val instance = constructor.newInstance(args: _*).asInstanceOf[T]
-    instance.asInstanceOf[Interlinking].execute()
+    instance.asInstanceOf[org.uclm.alarcos.rrc.dataquality.completeness.Schema].execute()
     instance
   }
 
