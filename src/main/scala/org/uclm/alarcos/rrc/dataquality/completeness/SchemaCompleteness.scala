@@ -37,7 +37,7 @@ trait SchemaCompletenessgMeasurement extends Serializable with ReaderRDF{
   def getMeasurementSubgraph(subjects: VertexRDD[Node], graph: Graph[Node, Node], properties: Seq[String]): Dataset[Row] = {
     import processSparkSession.implicits._
     val subjectsDF = subjects.filter(l => l._2.isURI()).map(l => (l._1, l._2.getURI())).toDF(Seq("srcId", "uri"): _*)
-    getMeasurementGlobal(graph, properties).join(subjectsDF, $"source" === $"srcId")
+    getMeasurementGlobal(graph, properties).join(subjectsDF, $"source" === $"srcId", "leftouter")
       .drop($"srcId")
   }
 
@@ -62,9 +62,10 @@ class SchemaCompleteness(sparkSession: SparkSession, inputFile: String) extends 
       "http://dbpedia.org/ontology/birthPlace",
       "http://dbpedia.org/ontology/deathPlace"
     )
+    println(graph.edges.count())
 /*    val result = getMeasurementSubgraph(graph.vertices, graph, properties)
     result.show(1000, truncate=false)*/
 //    getMeasurementGlobal(graph, properties).show(1000, truncate=false)
-    getMeasurementSubgraph(graph.vertices, graph, properties).show(1000, truncate=false)
+    //getMeasurementSubgraph(graph.vertices, graph, properties).show(1000, truncate=false)
   }
 }

@@ -4,7 +4,7 @@ import org.junit.runner.RunWith
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.junit.JUnitRunner
 import org.uclm.alarcos.rrc.CommonTest
-import org.uclm.alarcos.rrc.dataquality.completeness.Interlinking
+import org.uclm.alarcos.rrc.dataquality.completeness.{Interlinking, SchemaCompleteness}
 import org.uclm.alarcos.rrc.spark.SparkSpec
 
 /**
@@ -12,9 +12,41 @@ import org.uclm.alarcos.rrc.spark.SparkSpec
   */
 @RunWith(classOf[JUnitRunner])
 class MeasurementsTest extends CommonTest with SparkSpec with MockFactory {
+  //Nodes IDS
+  val A = 293150257L
+  val B = 293150288L
+  val C = 293150319L
+  val D = 293150350L
+  val E = 293150381L
+  val F = 293150412L
+  val G = 293150443L
 
-  "Execute getMeasurementSubgraph" should "be succesfully" in {
-    val testPath = "src/test/resources/dataset/tinysample.nt"
+  "Execute getMEasurementSugraph SchemaCompleteness" should "be succesfully" in {
+    val testPath = "src/test/resources/dataset/tinysampleSC.nt"
+    object MockedTripleReader extends SchemaCompleteness(spark, testPath)
+    val step = MockedTripleReader
+    val graph = step.loadGraph(spark, testPath)
+    val properties = Seq(
+      "http://xmlns.com/foaf/0.1/name",
+      "http://xmlns.com/foaf/0.1/exprop1"
+    )
+    val verts = graph.vertices.filter(l => l._2.isURI())
+    verts.collect().foreach(println(_))
+    val result = step.getMeasurementSubgraph(verts, graph, properties)
+    val results = result.collect()
+    result.show(1000, truncate=false)
+    assert(results.count(l => l.get(0).asInstanceOf[Long] === A & l.get(1) === 1.0) == 1)
+    assert(results.count(l => l.get(0).asInstanceOf[Long] === B & l.get(1) === 1.0) == 1)
+    assert(results.count(l => l.get(0).asInstanceOf[Long] === C & l.get(1) === 1.0) == 1)
+    assert(results.count(l => l.get(0).asInstanceOf[Long] === D & l.get(1) === 0.5) == 1)
+    assert(results.count(l => l.get(0).asInstanceOf[Long] === E & l.get(1) === 0.5) == 1)
+    assert(results.count(l => l.get(0).asInstanceOf[Long] === F & l.get(1) === 0.0) == 1)
+    assert(results.count(l => l.get(0).asInstanceOf[Long] === G & l.get(1) === 0.0) == 1)
+
+  }
+
+  "Execute getMeasurementSubgraph Interlinking Completeness" should "be succesfully" in {
+    val testPath = "src/test/resources/dataset/tinysampleI.nt"
     object MockedTripleReader extends Interlinking(spark, testPath)
     val step = MockedTripleReader
     val graph = step.loadGraph(spark, testPath)
@@ -27,14 +59,6 @@ class MeasurementsTest extends CommonTest with SparkSpec with MockFactory {
     //         v  \,v
     //         C -> E
 
-    //Nodes IDS
-    val A = 293150257L
-    val B = 293150288L
-    val C = 293150319L
-    val D = 293150350L
-    val E = 293150381L
-    val F = 293150412L
-    val G = 293150443L
 
 //      +---------+-----+------+------+-------------------+
 //      |   source|depth|countT|countF|        measurement|
