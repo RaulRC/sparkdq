@@ -48,7 +48,11 @@ trait SchemaCompletenessgMeasurement extends Serializable with ReaderRDF{
   })
   def getMeasurementSubgraph(subjects: VertexRDD[Node], graph: Graph[Node, Node], properties: Seq[String]): Dataset[Row] = {
     import processSparkSession.implicits._
-    val subjectsDF = subjects.filter(l => l._2.isURI()).map(l => (l._1, l._2.getURI())).toDF(Seq("srcId", "uri"): _*)
+    val subjectsDF = subjects
+      .filter(ll=> ll._2 != null)
+      .filter(l => l._2.isURI())
+      .map(l => (l._1, l._2.getURI()))
+      .toDF(Seq("srcId", "uri"): _*)
     getMeasurementGlobal(graph, properties).join(subjectsDF, $"source" === $"srcId", "leftouter")
       .drop($"srcId")
   }
@@ -71,12 +75,12 @@ class SchemaCompleteness(sparkSession: SparkSession, inputFile: String) extends 
   def execute(): Unit = {
     val graph = loadGraph(sparkSession, inputFile)
     val properties = Seq(
-      "http://dbpedia.org/ontology/birthPlace",
-      "http://dbpedia.org/ontology/deathPlace"
+      "http://www.semanticweb.org/rrc/ontologies/2017/7/semtweet#hasHashtag",
+      "http://www.semanticweb.org/rrc/ontologies/2017/7/semtweet#hasUser"
     )
     println(graph.edges.count())
-/*    val result = getMeasurementSubgraph(graph.vertices, graph, properties)
-    result.show(1000, truncate=false)*/
+    val result = getMeasurementSubgraph(graph.vertices, graph, properties)
+    result.show(1000, truncate=false)
 //    getMeasurementGlobal(graph, properties).show(1000, truncate=false)
     //getMeasurementSubgraph(graph.vertices, graph, properties).show(1000, truncate=false)
   }
