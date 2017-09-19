@@ -3,7 +3,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.uclm.alarcos.rrc</groupId>
   <artifactId>sparkdq</artifactId>
-  <version>1.0</version>
+  <version>1.1</version>
   <inceptionYear>2017</inceptionYear>
     <properties>
         <scala.version>2.11.8</scala.version>
@@ -190,7 +190,7 @@
                     <descriptorRefs>
                         <descriptorRef>jar-with-dependencies</descriptorRef>
                     </descriptorRefs>
-                    <finalName>sparkdq-1.0</finalName>
+                    <finalName>sparkdq-${version}</finalName>
                     <appendAssemblyId>false</appendAssemblyId>
                 </configuration>
                 <executions>
