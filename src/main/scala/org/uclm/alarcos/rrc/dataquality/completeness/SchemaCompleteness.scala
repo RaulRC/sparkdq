@@ -12,9 +12,8 @@ import org.apache.spark.sql.functions._
   * Created by raulreguillo on 17/09/17.
   */
 
-case class SchemaMeasurement(srcId: VertexId, measurement: Boolean, uri: String)
 
-trait SchemaCompletenessgMeasurement extends Serializable with ReaderRDF{
+trait SchemaCompletenessMeasurement extends Serializable with ReaderRDF{
   protected val processSparkSession: SparkSession
 
   def getMeasurementGlobal(graph: Graph[Node, Node], properties: Seq[String]): Dataset[Row] = {
