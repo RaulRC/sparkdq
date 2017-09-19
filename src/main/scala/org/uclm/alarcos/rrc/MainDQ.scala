@@ -2,15 +2,15 @@ package org.uclm.alarcos.rrc
 
 import com.typesafe.config.{Config, ConfigFactory}
 import org.slf4j.LoggerFactory
-import org.uclm.alarcos.rrc.config.DQAssessmentConfiguration
 import org.uclm.alarcos.rrc.utils.ParamsHelper
 import org.apache.spark.SparkConf
 import org.apache.spark.sql.SparkSession
+import org.uclm.alarcos.rrc.configDQ.SparkDQConfiguration
 import org.uclm.alarcos.rrc.dataquality.completeness.{Interlinking, SchemaCompleteness}
 /**
   * Created by Raul Reguillo on 31/08/17.
   */
-object Main {
+object MainDQ {
 
   def main(args: Array[String]): Unit = {
 
@@ -37,7 +37,7 @@ object Main {
     logger.info("Create Context for " + env)
     logger.info("Configuration file loaded..." + config.getConfig(env))
 
-    val loadedConfig = DQAssessmentConfiguration.apply(env, config)
+    val loadedConfig = SparkDQConfiguration.apply(env, config)
 
     val sparkConf = new SparkConf()
       .setAppName("Interlinking")
