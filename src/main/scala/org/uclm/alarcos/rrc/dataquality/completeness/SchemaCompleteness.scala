@@ -50,9 +50,9 @@ trait SchemaCompletenessMeasurement extends Serializable with ReaderRDF{
     val subjectsDF = subjects
       .filter(ll=> ll._2 != null)
       .filter(l => l._2.isURI())
-      .map(l => (l._1, l._2.getURI()))
+      .map(l => (l._1, l._2.toString()))
       .toDF(Seq("srcId", "uri"): _*)
-    getMeasurementGlobal(graph, properties).join(subjectsDF, $"source" === $"srcId", "leftouter")
+    getMeasurementGlobal(graph, properties).join(subjectsDF, $"source" === $"srcId")
       .drop($"srcId")
   }
 
@@ -68,7 +68,7 @@ trait SchemaCompletenessMeasurement extends Serializable with ReaderRDF{
   }
 }
 
-class SchemaCompleteness(sparkSession: SparkSession, inputFile: String) extends SchemaCompletenessgMeasurement{
+class SchemaCompleteness(sparkSession: SparkSession, inputFile: String) extends SchemaCompletenessMeasurement{
   protected val processSparkSession: SparkSession = sparkSession
 
   def execute(): Unit = {
