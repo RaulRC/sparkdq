@@ -2,7 +2,7 @@ package org.uclm.alarcos.rrc
 
 import com.typesafe.config.{Config, ConfigFactory}
 import org.slf4j.LoggerFactory
-import org.uclm.alarcos.rrc.utils.ParamsHelper
+import org.uclm.alarcos.rrc.utilsdq.ParamsHelper
 import org.apache.spark.SparkConf
 import org.apache.spark.sql.SparkSession
 import org.uclm.alarcos.rrc.configDQ.SparkDQConfiguration
