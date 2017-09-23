@@ -97,9 +97,12 @@ class SchemaCompleteness(sparkSession: SparkSession, inputFile: String) extends 
         "EXCELLENT"
     })
 
-    val (result, newGraph) = applyRuleSet(getMeasurementSubgraph(graph.vertices, graph, properties), graph, "measurement", "contextualResult", applyContextualDQ)
+    val result = applyRuleSet(getMeasurementSubgraph(graph.vertices, graph, properties),
+      "measurement",
+      "contextualResult",
+      applyContextualDQ)
+
     result.show(10, truncate=false)
-//    getMeasurementGlobal(graph, properties).show(1000, truncate=false)
-    //getMeasurementSubgraph(graph.vertices, graph, properties).show(1000, truncate=false)
+
   }
 }
