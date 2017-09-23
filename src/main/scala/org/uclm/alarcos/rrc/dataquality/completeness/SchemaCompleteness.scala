@@ -73,9 +73,14 @@ class SchemaCompleteness(sparkSession: SparkSession, inputFile: String) extends 
 
   def execute(): Unit = {
     val graph = loadGraph(sparkSession, inputFile)
-    val properties = Seq(
+/*    val properties = Seq(
       "http://www.semanticweb.org/rrc/ontologies/2017/7/semtweet#hasHashtag",
       "http://www.semanticweb.org/rrc/ontologies/2017/7/semtweet#hasUser"
+    )*/
+    val properties = Seq(
+      "http://xmlns.com/foaf/0.1/name",
+      "http://dbpedia.org/ontology/birthDate",
+      "http://xmlns.com/foaf/0.1/givenName"
     )
     println(graph.edges.count())
     val result = getMeasurementSubgraph(graph.vertices, graph, properties)
