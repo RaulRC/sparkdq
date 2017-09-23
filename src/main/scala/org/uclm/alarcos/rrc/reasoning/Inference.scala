@@ -10,7 +10,7 @@ import org.apache.spark.sql.DataFrame
 
 trait Inference {
 
-  def applyRuleSet(df: DataFrame): DataFrame = {
+  def applyRuleSet(df: DataFrame, ruleSet: RuleSet): DataFrame = {
     df
   }
   def applyRuleSet(graph: Graph[Node, Node]): Graph[Node, Node] = {

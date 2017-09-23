@@ -7,6 +7,7 @@ import org.apache.spark.sql._
 import org.uclm.alarcos.rrc.io.ReaderRDF
 import org.uclm.alarcos.rrc.models.Measurement
 import org.apache.spark.sql.functions._
+import org.uclm.alarcos.rrc.reasoning._
 
 /**
   * Created by raulreguillo on 17/09/17.
@@ -68,7 +69,7 @@ trait SchemaCompletenessMeasurement extends Serializable with ReaderRDF{
   }
 }
 
-class SchemaCompleteness(sparkSession: SparkSession, inputFile: String) extends SchemaCompletenessMeasurement{
+class SchemaCompleteness(sparkSession: SparkSession, inputFile: String) extends SchemaCompletenessMeasurement with Inference{
   protected val processSparkSession: SparkSession = sparkSession
 
   def execute(): Unit = {
@@ -82,9 +83,12 @@ class SchemaCompleteness(sparkSession: SparkSession, inputFile: String) extends 
       "http://dbpedia.org/ontology/birthDate",
       "http://xmlns.com/foaf/0.1/givenName"
     )
+    val ant = new Antecedent("measurement", Operator.`<=`, 0.34)
+    val cons = new Consequent("contextResult", "GOOD")
+    val ruleset = new RuleSet(Seq(Rule(Seq(ant), Conjunction.And, cons)))
     println(graph.edges.count())
-    val result = getMeasurementSubgraph(graph.vertices, graph, properties)
-    result.show(1000, truncate=false)
+    val result = applyRuleSet(getMeasurementSubgraph(graph.vertices, graph, properties), ruleset)
+    result.show(10, truncate=false)
 //    getMeasurementGlobal(graph, properties).show(1000, truncate=false)
     //getMeasurementSubgraph(graph.vertices, graph, properties).show(1000, truncate=false)
   }
