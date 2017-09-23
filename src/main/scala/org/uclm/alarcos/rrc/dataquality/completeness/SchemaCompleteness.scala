@@ -87,7 +87,17 @@ class SchemaCompleteness(sparkSession: SparkSession, inputFile: String) extends 
     val cons = new Consequent("contextResult", "GOOD")
     val ruleset = new RuleSet(Seq(Rule(Seq(ant), Conjunction.And, cons)))
     println(graph.edges.count())
-    val result = applyRuleSet(getMeasurementSubgraph(graph.vertices, graph, properties), ruleset)
+
+    def applyContextualDQ = udf((value: Double) => {
+      if (value <= 0.34)
+        "BAD"
+      else if (value > 0.34 && value <= 0.67)
+        "NORMAL"
+      else
+        "EXCELLENT"
+    })
+
+    val (result, newGraph) = applyRuleSet(getMeasurementSubgraph(graph.vertices, graph, properties), graph, "measurement", "contextualResult", applyContextualDQ)
     result.show(10, truncate=false)
 //    getMeasurementGlobal(graph, properties).show(1000, truncate=false)
     //getMeasurementSubgraph(graph.vertices, graph, properties).show(1000, truncate=false)
