@@ -22,7 +22,6 @@ trait InterlinkingMeasurement extends Serializable with ReaderRDF{
   def getMeasurementSubgraph(subjects: VertexRDD[Node], graph: Graph[Node, Node], depth: Int ): Dataset[Row] = {
     val expanded = expandNodesNLevel(subjects, graph, depth)
     import processSparkSession.implicits._
-    println("____")
     val subs = subjects
       .filter(ll => ll._2.isURI())
       .map(l => (l._1, l._2.getURI())).toDF(Seq("vertexId", "vertexURI"): _*)
