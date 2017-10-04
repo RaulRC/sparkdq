@@ -2,6 +2,7 @@
 <http://dbpedia.org/resource/subject_A> <http://xmlns.com/foaf/0.1/surname> "A surname"@en .
 <http://dbpedia.org/resource/subject_A> <http://xmlns.com/foaf/0.1/givenName> "A"@en .
 <http://dbpedia.org/resource/subject_A> <http://xmlns.com/foaf/0.1/exprop1> "blah"@en .
+<http://dbpedia.org/resource/subject_A> <http://xmlns.com/foaf/0.1/exprop1> "blahblah"@en .
 <http://dbpedia.org/resource/subject_A> <http://xmlns.com/foaf/0.1/exprop2> "foo"@en .
 
 <http://dbpedia.org/resource/subject_A> <http://dbpedia.org/ontology/knows> <http://dbpedia.org/resource/subject_B> .

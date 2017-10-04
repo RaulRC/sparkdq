@@ -21,8 +21,8 @@ trait SchemaCompletenessMeasurement extends Serializable with ReaderRDF{
     import processSparkSession.implicits._
     val edgeRDD = graph.edges.filter(l => true)
 
-    val propIdsRDD = properties.map(p => edgeRDD.filter(l => l.attr.hasURI(p))).reduce(_ union _)
-      .map(l => l.srcId).cache()
+    val propIdsRDD = properties.map(p => edgeRDD.map(ll => (ll.srcId, ll.attr)).distinct().filter(l => l._2.hasURI(p))).reduce(_ union _)
+      .map(l => l._1).cache()
 
     val nonPropsDF = edgeRDD.map(l => l.srcId).toDF(Seq("source"): _*)
     nonPropsDF.join(propIdsRDD
