@@ -27,7 +27,12 @@
             <artifactId>sparkrdf</artifactId>
             <version>1.1-SNAPSHOT</version>
         </dependency>
-
+        <!-- https://mvnrepository.com/artifact/org.apache.hadoop/hadoop-aws -->
+        <dependency>
+            <groupId>org.apache.hadoop</groupId>
+            <artifactId>hadoop-aws</artifactId>
+            <version>2.7.4</version>
+        </dependency>
         <!-- Testing -->
         <dependency>
             <groupId>org.scalatest</groupId>

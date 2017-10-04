@@ -27,7 +27,8 @@ object MainDQ {
     }
     implicit val params = ParamsHelper.getParams(args)
     implicit val env = params.env
-    implicit val inputFile = params.inputFile
+    //implicit val inputFile = params.inputFile
+
 
     if (!environments.contains(env)) {
       logger.error(s"Environment $env not allowed. Valid environments are: $environments")
@@ -38,7 +39,7 @@ object MainDQ {
     logger.info("Configuration file loaded..." + config.getConfig(env))
 
     val loadedConfig = SparkDQConfiguration.apply(env, config)
-
+    implicit val inputFile = loadedConfig.hdfsInputPath
     val sparkConf = new SparkConf()
       .setAppName("Interlinking")
       .setMaster(loadedConfig.masterMode)
@@ -48,9 +49,12 @@ object MainDQ {
       .config(sparkConf)
       .getOrCreate()
 
-
-    logger.info("Loading class " + "SchemaCompleteness")
-    launchStep(Class.forName(s"org.uclm.alarcos.rrc.dataquality.completeness.SchemaCompleteness")) (spark, inputFile)
+    val AWS_ACCESS = System.getenv("AWS_ACCESS_KEY_ID")
+    val AWS_SECRET = System.getenv("AWS_SECRET_ACCESS_KEY")
+    spark.sparkContext.hadoopConfiguration.set("fs.s3n.awsAccessKeyId", AWS_ACCESS)
+    spark.sparkContext.hadoopConfiguration.set("fs.s3n.awsSecretAccessKey", AWS_SECRET)
+    logger.info("Loading class " + "InterlinkingCompleteness")
+    launchStep(Class.forName(s"org.uclm.alarcos.rrc.dataquality.completeness.Interlinking")) (spark, inputFile)
 
   }
 
@@ -65,7 +69,7 @@ object MainDQ {
   def launchStep[T](clazz: java.lang.Class[T])(args: AnyRef*): T = {
     val constructor = clazz.getConstructors()(0)
     val instance = constructor.newInstance(args: _*).asInstanceOf[T]
-    instance.asInstanceOf[org.uclm.alarcos.rrc.dataquality.completeness.SchemaCompleteness].execute()
+    instance.asInstanceOf[org.uclm.alarcos.rrc.dataquality.completeness.Interlinking].execute()
     instance
   }
 

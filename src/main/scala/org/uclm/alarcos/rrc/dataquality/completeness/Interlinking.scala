@@ -22,10 +22,22 @@ trait InterlinkingMeasurement extends Serializable with ReaderRDF{
   def getMeasurementSubgraph(subjects: VertexRDD[Node], graph: Graph[Node, Node], depth: Int ): Dataset[Row] = {
     val expanded = expandNodesNLevel(subjects, graph, depth)
     import processSparkSession.implicits._
-    val subs = subjects
+    val subs2 = subjects
+      .filter(lll => lll._2 != null)
+
+    subs2.collect().foreach(println(_))
+
+    val subs = subs2
       .filter(ll => ll._2.isURI())
       .map(l => (l._1, l._2.getURI())).toDF(Seq("vertexId", "vertexURI"): _*)
-    val filteredNodes = graph.vertices.map(l => (l._1, l._2.isURI())).toDF(Seq("nodeId", "isURI"): _*)
+
+    subs.collect().foreach(println(_))
+
+    val filteredNodes = graph.vertices
+      .filter(l => l._2 != null)
+      .map(l => (l._1, l._2.isURI())).toDF(Seq("nodeId", "isURI"): _*)
+
+
     val nodesTF = expanded.join(filteredNodes, $"level" === $"nodeId").drop($"nodeId").drop($"level").orderBy($"source", $"depth")
     val partResultTrue = nodesTF.groupBy($"source", $"depth").agg(count(when($"isURI" === true, true)) as "countT").orderBy($"source", $"depth")
     val partResultFalse = nodesTF.groupBy($"source", $"depth").agg(count(when($"isURI" === false, true)) as "countF").orderBy($"source", $"depth")
@@ -57,9 +69,13 @@ class Interlinking(sparkSession: SparkSession, inputFile: String) extends Interl
   protected val processSparkSession: SparkSession = sparkSession
 
   def execute(): Unit = {
+
     val graph = loadGraph(sparkSession, inputFile)
     val s2 = getSubjectsWithProperty(graph, "http://dbpedia.org/ontology/deathPlace")
     s2.collect().foreach(println(_))
+
+    graph.vertices.collect().foreach(println(_))
+    println(graph.vertices.count())
     var result = getMeasurementSubgraph(graph.vertices, graph, 3)
     result.show(100000, truncate=false)
     //result.collect().foreach(println(_))
