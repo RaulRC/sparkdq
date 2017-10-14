@@ -14,11 +14,25 @@ import org.apache.spark.sql.functions._
 trait InterlinkingMeasurement extends Serializable with ReaderRDF{
   protected val processSparkSession: SparkSession
 
+  /**
+    * Returns the result for Interlinking Measurement for all the graph, globally
+    *
+    * @param graph Spark GraphX of Nodes
+    * @return Double of the global result
+    */
   def getMeasurementGlobal(graph: Graph[Node, Node]): Double = {
     val total = graph.vertices.count().toDouble
     (total - graph.vertices.map(vert => vert._2).filter(node => !node.isURI()).count().toDouble)/total
   }
 
+  /**
+    * Returns the result particularized for each subject in the subset of the graph
+    *
+    * @param subjects Subset of subjects to evaluate
+    * @param graph Original Spark GraphX of Nodes
+    * @param depth Level of depth to evaluate
+    * @return Dataset of rows with a result for each subject
+    */
   def getMeasurementSubgraph(subjects: VertexRDD[Node], graph: Graph[Node, Node], depth: Int ): Dataset[Row] = {
     val expanded = expandNodesNLevel(subjects, graph, depth)
     import processSparkSession.implicits._
@@ -39,8 +53,18 @@ trait InterlinkingMeasurement extends Serializable with ReaderRDF{
       .withColumn("measurement", getRatio($"countT", $"countF")).join(subs, $"source" === $"vertexId").drop($"vertexId")
     result
   }
+
   def getRatio = udf((totalTrues: Int, totalFalses: Int) => { totalTrues.toDouble/(totalTrues.toDouble + totalFalses.toDouble) })
 
+  /**
+    * Returns the result particularized for the subject
+    *
+    * @param subjectId Subject to evaluate
+    * @param subjectNode Node to evaluate
+    * @param graph Original Spark GraphX of Nodes
+    * @param depth Level of depth to evaluate
+    * @return RDD of Measurements for given subject
+    */
   def getMeasurementSubject(subjectId: VertexId, subjectNode: Node, graph: Graph[Node, Node], depth: Int ): RDD[Measurement] = {
     var results: VertexRDD[Node] = graph.vertices.filter(line => line._1 == subjectId)
     results.collect().foreach(println(_))

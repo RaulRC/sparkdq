@@ -17,6 +17,13 @@ import org.uclm.alarcos.rrc.reasoning._
 trait SchemaCompletenessMeasurement extends Serializable with ReaderRDF{
   protected val processSparkSession: SparkSession
 
+
+  /**
+    * Returns the result for SchemaCompleteness Measurement for all the graph, globally
+    *
+    * @param graph Spark GraphX of Nodes
+    * @return Double of the global result
+    */
   def getMeasurementGlobal(graph: Graph[Node, Node], properties: Seq[String]): Dataset[Row] = {
     import processSparkSession.implicits._
     val edgeRDD = graph.edges.filter(l => true)
@@ -46,6 +53,15 @@ trait SchemaCompletenessMeasurement extends Serializable with ReaderRDF{
       res = 1.0
     res
   })
+
+  /**
+    * Returns the result particularized for each subject in the subset of the graph
+    *
+    * @param subjects Subset of subjects to evaluate
+    * @param graph Original Spark GraphX of Nodes
+    * @param properties Sequence of properties to look for
+    * @return Dataset of rows with a result for each subject
+    */
   def getMeasurementSubgraph(subjects: VertexRDD[Node], graph: Graph[Node, Node], properties: Seq[String]): Dataset[Row] = {
     import processSparkSession.implicits._
     val subjectsDF = subjects
@@ -57,7 +73,13 @@ trait SchemaCompletenessMeasurement extends Serializable with ReaderRDF{
       .drop($"srcId")
   }
 
-  @deprecated
+  /**
+    * Returns the result particularized for the subject
+    *
+    * @param subjectId Subject to evaluate
+    * @param graph Original Spark GraphX of Nodes
+    * @return True if gets all properties. False otherwise
+    */
   def getMeasurementSubject(subjectId: VertexId, graph: Graph[Node, Node], properties: Seq[String]): Boolean = {
     import processSparkSession.implicits._
     if (graph.edges
