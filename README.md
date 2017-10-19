@@ -22,18 +22,17 @@ getMeasurementSubgraph(graph.vertices, graph, properties),
 
 Contextual Assessment
 ```scala
-    val graph = loadGraph(sparkSession, inputFile)
-    val depth = 3
-    def setLevels = udf((value: Double)=>{
-      if (value <=0.34)
-        "BAD"
-      else if (value <= 0.67)
-        "NORMAL"
-      else
-        "GOOD"
-    })
+val graph = loadGraph(sparkSession, inputFile)
+val depth = 3
+def setLevels = udf((value: Double)=>{
+    if (value <=0.34)
+      "BAD"
+    else if (value <= 0.67)
+      "NORMAL"
+    else
+      "GOOD"
+})
     
-   val result = applyRuleSet(getMeasurementSubgraph(graph.vertices, graph, depth),
+val result = applyRuleSet(getMeasurementSubgraph(graph.vertices, graph, depth),
       "measurement", "contextualAssessment", setLevels).toDF()
-    result.show(10000, truncate = false)
 ```
